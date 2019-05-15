@@ -14,3 +14,30 @@ RUN apk update && \
     $DB_PACKAGES \
     $RUBY_PACKAGES && \
     rm -rf /var/cache/apk/*
+
+RUN addgroup -S deployer -g 1000 && adduser -S -g '' -u 1000 -G deployer deployer
+
+ENV APP_PATH=/app \
+    PUBLIC_PATH=/app/public \
+    TEMP_PATH=/app/tmp \
+    NODE_MODULES_PATH=/app/node_modules \
+    BUNDLE_PATH=/bundle \
+    BUNDLE_BIN=/bundle/bin \
+    GEM_HOME=/bundle
+ENV PATH="${BUNDLE_BIN}:${PATH}"
+
+RUN mkdir -p $APP_PATH
+
+WORKDIR $APP_PATH
+
+ADD --chown=deployer:deployer . $APP_PATH
+
+# Manually create required volumes, https://github.com/docker/compose/issues/3270
+RUN mkdir -p $BUNDLE_PATH \
+  && mkdir -p $TEMP_PATH \
+  && mkdir -p $NODE_MODULES_PATH \
+  && mkdir -p $PUBLIC_PATH \
+  && chown -R deployer:deployer $BUNDLE_PATH \
+  && chown -R deployer:deployer $TEMP_PATH \
+  && chown -R deployer:deployer $NODE_MODULES_PATH \
+  && chown -R deployer:deployer $PUBLIC_PATH
